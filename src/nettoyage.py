@@ -83,3 +83,20 @@ def extractionSeries(chemin_racine):
         liste.append(extractionDonnerSeries(serie))
     
     return serie
+   
+ def calcule_frequence_serie(liste):
+  """
+  Fonction qui calcule la frequence de chaque mot dans une serie.
+  
+  param : liste : list[string] -> une liste de string qui correspond au different titre des episodes d'une series.
+  return : dictionnaire des frequences d'un mot dans une serie.
+  """
+   dic = dict()
+
+   for i in liste :
+       if i in dic :
+           dic[i] += 1/len(liste)
+       else :
+           dic[i] = 1/len(liste)
+   
+   return dic
