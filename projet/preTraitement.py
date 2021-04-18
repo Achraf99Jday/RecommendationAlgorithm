@@ -327,6 +327,17 @@ def filtreMot(listeFonction,str) :
             return " "
     return str
 
+def filtre_mot_bisard_ou_petit(pd) :
+    colonn = pd.columns
+    colonn2 = []
+    liste = ["aaa","bbb","ccc","ddd","eee","fff","ggg","hhh","iii","jjj","kkk","lll","mmm","nnn","ooo","ppp","qqq","rrr","sss","ttt","uuu","vvv","www","xxx","yyy","zzz"]
+
+    for i in colonn :
+        if len(i) <= 2 or i in liste :
+            colonn2.append(i)
+
+    return pd.drop(colonn2,axis=1) #supprime les colonnes inutiles
+    
 def listeFonctionFiltreTitreSerie():
     """
     Retourne une liste de fonction qu'on souhaite appliquer a un titre d'une serie

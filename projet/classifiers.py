@@ -1,16 +1,99 @@
 # Import de packages externes
 import numpy as np
-import pandas as pd 
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
 import copy
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import PCA 
+from sklearn.manifold import TSNE
+from sklearn.manifold import MDS
+from sklearn.cluster import KMeans
+from sklearn.metrics import euclidean_distances
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import cosine_distances
+from sklearn.metrics.pairwise import manhattan_distances
 
-def TFIDF(liste):
-    vectorizer = TfidfVectorizer()
+
+
+def TFIDF(liste,seuil_min=0.0,seuil_max=1.0):
+    vectorizer = TfidfVectorizer(min_df=seuil_min,max_df=seuil_max)
     vectors = vectorizer.fit_transform(liste)
     feature_names = vectorizer.get_feature_names()
     dense = vectors.todense()
     denselist = dense.tolist()
-    return pd.DataFrame(denselist, columns=feature_names),feature_names
+    return pd.DataFrame(denselist, columns=feature_names)
+
+def filtre_tfidf(pd_tfidf,feature_name):
+    """
+    UTILISE PAS TROP LENT
+    """
+    for i in feature_name :
+        if pd_tfidf[i].mean() < 0.025 :
+            pd_tfidf.pop(i)
+            continue
+        if pd_tfidf[i].mean() > 0.075 :
+            pd_tfidf.pop(i)
+    return pd_tfidf
+
+def reduction_dimension_pca(df,dim_out=2):
+    """
+    df : DataFrame
+    return : ndarray
+    """    
+    model = PCA(n_components=dim_out)
+    return model.fit_transform(df)
+
+def reduction_dimension_tsne(df,dim_out=2,perplexity_=30):
+    """
+    df : DataFrame
+    return : ndarray
+    """
+    model = TSNE(n_components=dim_out,perplexity=perplexity_)
+    return model.fit_transform(df)
+
+
+def reduction_dimension_mds(df,dim_out=2):
+    """
+    df : DataFrame -> Matrice carrer des distances euclidiennes, cosaynes ...
+    return : ndarray
+    """
+    seed = np.random.RandomState(seed=3)
+    mds = MDS(n_components=dim_out, max_iter=3000, eps=1e-9, random_state=seed, dissimilarity="precomputed", n_jobs=1)
+    return mds.fit(df).embedding_
+
+def distance_euclidienne(df):
+    return euclidean_distances(df)  
+
+def distance_cosine(df):
+    return cosine_distances(df)
+
+def distance_manhattan(df):
+    return manhattan_distances(df)
+
+def similariter_cosayne(df):
+    return cosine_similarity(df)
+
+def Kmeans(df,nb_cluster):
+    """ Retourne la liste des Y en fonction de leur clusterings
+    """
+    model = KMeans(n_clusters=nb_cluster)
+    model.fit(df)
+    return model.labels_
+
+
+def liste_nom_prediction(liste_nom,Y):
+    """ 
+    liste_nom -> La liste des noms des series
+    Y -> La liste des Y en fonction de leur clusterings
+    (Attention liste_nom et Y doivent avoir le meme ordre)
+    """
+    res = []
+    for i in range(len(liste_nom)) :
+        res.append((liste_nom[i],Y[i]))
+    return res
+
 
 
 
@@ -126,7 +209,7 @@ class ClassifierKNN(Classifier):
 
 
 # classifieur Perceptron (moindre carrer)
-class ClassifierADALINE(classif.Classifier):
+class ClassifierADALINE(Classifier):
     def train(self,desc_set, label_set):
         
         self.w = np.linalg.solve(np.matmul(np.transpose(desc_set), desc_set), np.matmul(np.transpose(desc_set), label_set))
